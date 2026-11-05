@@ -131,4 +131,4 @@ The app is written in TypeScript on `@devvit/public-api` 0.15.0 with the legacy 
 
 Copyright (c) 2026 Citizen Tech Collective, LLC. All rights reserved.
 
-Anyone may install and use the app as it is published on Reddit's Developer Platform. The source code is published so it can be read and checked; it is not open source, and it may not be copied, modified, redistributed or deployed without written permission from Citizen Tech Collective, LLC. The full terms are in the [LICENSE](../LICENSE) file.
+Anyone may install and use the app as it is published on Reddit's Developer Platform. The source code is published so it can be read and checked; it is not open source, and it may not be copied, modified, redistributed or deployed without written permission from Citizen Tech Collective, LLC. The full terms are in the [LICENSE](https://github.com/Citizen-Tech-Collective/devvit-reddit-to-slack/blob/main/LICENSE) file.
