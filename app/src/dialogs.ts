@@ -112,8 +112,8 @@ const historicalFetchForm = Devvit.createForm(
       {
         type: 'boolean',
         name: 'sinceChange',
-        label: 'Only posts made since the bot token or channel ID last changed',
-        helpText: 'Turn this off to include older posts, for example to fill a new channel.',
+        label: 'Only send posts with time stamps after the slackbot token or channel was changed.',
+        helpText: 'Uncheck to include older posts.',
         defaultValue: true,
       },
       { type: 'boolean', name: 'countOnly', label: 'Count only (do not send to Slack)', defaultValue: false },

@@ -158,8 +158,8 @@ Devvit.addSettings([
       {
         type: 'boolean',
         name: 'onlySinceChange',
-        label: '\u00A0\u00A0\u00A0Only send posts made since the bot token or channel ID last changed',
-        helpText: '\n\u00A0\u00A0\u00A0\u00A0Leave this on so that setting the app up, or changing a channel, does not send older posts. Turn it off to let the scheduled check send the newest posts it finds, whatever their age.',
+        label: '\u00A0\u00A0\u00A0Only send posts with time stamps after the slackbot token or channel was changed.',
+        helpText: '\n\u00A0\u00A0\u00A0\u00A0Uncheck to include older posts.',
         defaultValue: true,
         scope: 'installation',
       },
