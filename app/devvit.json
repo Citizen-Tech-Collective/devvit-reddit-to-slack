@@ -1,0 +1,24 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "reddit-to-slack",
+  "blocks": {
+    "entry": "src/main.tsx",
+    "triggers": [
+      "onAppInstall",
+      "onAppUpgrade",
+      "onPostCreate",
+      "onModAction",
+      "onPostDelete"
+    ]
+  },
+  "permissions": {
+    "http": {
+      "enable": true,
+      "domains": [
+        "slack.com"
+      ]
+    },
+    "reddit": true,
+    "redis": true
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.devvit/
+.env
+*.log
+.DS_Store
+
+# Local working documents, not part of the published repository
+docs/adr/
+docs/comment-review.md

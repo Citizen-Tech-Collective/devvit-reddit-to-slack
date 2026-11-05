@@ -1,0 +1,89 @@
+reddit-to-slack
+Copyright (c) 2026 Citizen Tech Collective, LLC. All rights reserved.
+
+This repository is published so that the source code of the reddit-to-slack
+app can be read and inspected. It is not open source software. The terms
+below state everything you are permitted to do with it.
+
+1. OWNERSHIP
+
+   The software in this repository, including its source code, configuration,
+   tests and documentation (the "Software"), is the property of Citizen Tech
+   Collective, LLC ("CTC"). The Software is licensed, not sold. All rights not
+   expressly granted in this license are reserved by CTC.
+
+2. WHAT YOU MAY DO
+
+   (a) Install and use the reddit-to-slack app as CTC publishes it on Reddit's
+       Developer Platform. That use is governed by the app's Terms of Service
+       and Privacy Policy.
+
+   (b) View the Software, and download or clone a copy of it, for the sole
+       purposes of reading it, evaluating the app, verifying what the app
+       does, or reporting a problem to CTC.
+
+3. WHAT YOU MAY NOT DO
+
+   Without CTC's prior written permission, you may not:
+
+   (a) copy the Software except as permitted in section 2(b);
+   (b) modify, adapt, translate or create derivative works of the Software;
+   (c) distribute, publish, sublicense, sell, rent or otherwise make the
+       Software, or any part or derivative of it, available to anyone else;
+   (d) deploy, host or run the Software, or any part or derivative of it,
+       including by uploading it to Reddit's Developer Platform or to any
+       other service as an app of your own;
+   (e) remove or alter any copyright or ownership notice in the Software; or
+   (f) use the names "reddit-to-slack" or "Citizen Tech Collective", or any
+       CTC logo, in a way that suggests CTC endorses or is connected with
+       something you have made.
+
+4. FEEDBACK AND CONTRIBUTIONS
+
+   If you send CTC a bug report, suggestion, or proposed change, including
+   through an issue or pull request, you grant CTC a perpetual, irrevocable,
+   worldwide, royalty-free right to use, modify and incorporate it into the
+   Software and into anything else, without any obligation to you. You
+   confirm that you have the right to grant this.
+
+5. PLATFORMS
+
+   Nothing in this license limits the rights CTC grants to Reddit, Inc. under
+   Reddit's Developer Terms so that Reddit can host, run and distribute the
+   app. Rights that GitHub's Terms of Service give other GitHub users in
+   respect of public repositories, such as viewing and forking within
+   GitHub, are not affected; a fork made on that basis is still subject to
+   sections 2 and 3.
+
+   Third-party packages that the Software depends on are the property of
+   their own authors and are covered by their own licenses.
+
+6. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF
+   ANY KIND, EXPRESS OR IMPLIED, INCLUDING THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND ACCURACY.
+
+7. LIMITATION OF LIABILITY
+
+   TO THE FULLEST EXTENT PERMITTED BY LAW, CTC AND ITS MEMBERS, MANAGERS,
+   EMPLOYEES AND CONTRACTORS WILL NOT BE LIABLE FOR ANY CLAIM, DAMAGES OR
+   OTHER LIABILITY ARISING FROM OR RELATING TO THE SOFTWARE OR ITS USE.
+
+8. TERMINATION
+
+   Your rights under this license end automatically if you breach it. On
+   termination you must delete every copy of the Software you hold. Sections
+   1, 3, 4, 6, 7 and 9 continue to apply.
+
+9. GOVERNING LAW
+
+   This license is governed by New York law, without regard to
+   conflict-of-law principles. Unless applicable law requires otherwise,
+   disputes must be brought in state or federal courts located in New York.
+
+10. CONTACT
+
+    To ask for permission, or with any question about this license, open an
+    issue at
+    https://github.com/Citizen-Tech-Collective/devvit-reddit-to-slack/issues
