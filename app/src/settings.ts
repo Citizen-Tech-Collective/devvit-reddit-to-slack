@@ -156,14 +156,6 @@ Devvit.addSettings([
         helpText: '\n\u00A0\u00A0\u00A0\u00A0How many of the newest posts each scheduled check looks at.',
       },
       {
-        type: 'boolean',
-        name: 'onlySinceChange',
-        label: '\u00A0\u00A0\u00A0Only send posts with time stamps after the slackbot token or channel was changed.',
-        helpText: '\n\u00A0\u00A0\u00A0\u00A0Uncheck to include older posts.',
-        defaultValue: true,
-        scope: 'installation',
-      },
-      {
         type: 'select',
         name: 'scheduleInterval',
         label: '\u00A0\u00A0\u00A0Schedule interval',
@@ -171,6 +163,13 @@ Devvit.addSettings([
         defaultValue: [String(DEFAULT_INTERVAL.minutes)],
         multiSelect: false,
         helpText: '\n\u00A0\u00A0\u00A0\u00A0Changes take effect on the next app upgrade or reinstall.',
+      },
+      {
+        type: 'boolean',
+        name: 'onlySinceChange',
+        label: '\u00A0\u00A0\u00A0Only send posts with time stamps after the slackbot token or channel was changed.',
+        defaultValue: true,
+        scope: 'installation',
       },
     ],
   },
