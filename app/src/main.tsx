@@ -35,19 +35,22 @@ Devvit.addSchedulerJob({
         console.error('Retrying outstanding removals failed:', error);
       }
 
-      const { target, modQueueTarget, slackFingerprint, postsLimit, template, appearance } = await readSettings(context.settings);
+      const { target, modQueueTarget, slackFingerprint, postsLimit, onlySinceChange, template, appearance } = await readSettings(context.settings);
       if (!target) {
         console.error('Slack bot token or channel ID not configured');
         return;
       }
-      // Posts made before the bot token or a channel last changed are skipped,
-      // so a new channel is not filled without being asked. Older public posts
-      // can still be sent with the historical fetch.
+      // Unless moderators turn the setting off, posts made before the bot
+      // token or a channel last changed are skipped, so a new channel is not
+      // filled without being asked. Older public posts can still be sent with
+      // the historical fetch. The change time is read either way, which keeps
+      // it current.
       const changedAtSeconds = (await slackSettingsChangedAt(context, subredditName, slackFingerprint)) / 1000;
+      const earliestSeconds = onlySinceChange ? changedAtSeconds : 0;
       const flairMap = await loadFlairMap(context, subredditName);
 
       const sendUnsent = async (kind: string, posts: SlackPost[], to: SlackTarget): Promise<void> => {
-        const recent = posts.filter((post) => post.createdUtc >= changedAtSeconds);
+        const recent = posts.filter((post) => post.createdUtc >= earliestSeconds);
         const unsent = await filterUnsent(context, subredditName, recent, to.channel);
         if (unsent.length === 0) return;
         const sentCount = await sendPosts(context, subredditName, unsent, { target: to, flairMap, template, appearance });

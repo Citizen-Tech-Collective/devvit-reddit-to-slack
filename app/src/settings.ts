@@ -156,6 +156,14 @@ Devvit.addSettings([
         helpText: '\n\u00A0\u00A0\u00A0\u00A0How many of the newest posts each scheduled check looks at.',
       },
       {
+        type: 'boolean',
+        name: 'onlySinceChange',
+        label: '\u00A0\u00A0\u00A0Only send posts made since the bot token or channel ID last changed',
+        helpText: '\n\u00A0\u00A0\u00A0\u00A0Leave this on so that setting the app up, or changing a channel, does not send older posts. Turn it off to let the scheduled check send the newest posts it finds, whatever their age.',
+        defaultValue: true,
+        scope: 'installation',
+      },
+      {
         type: 'select',
         name: 'scheduleInterval',
         label: '\u00A0\u00A0\u00A0Schedule interval',
@@ -233,7 +241,7 @@ export async function readSettings(settings: Context['settings']) {
   const target: SlackTarget | null = token && channel ? { token, channel } : null;
   const sendModQueue = (await selected(settings, 'postsToSend')) === 'modqueue';
   const template = String((await settings.get('postTemplate')) ?? '');
-  // The two toggles default to on; a setting never saved comes back undefined
+  // These toggles default to on; a setting never saved comes back undefined
   const appearance: AppearanceOptions = {
     useTitleAsSender: (await settings.get('useTitleAsSender')) !== false,
     useFlairAsIcon: (await settings.get('useFlairAsIcon')) !== false,
@@ -244,6 +252,7 @@ export async function readSettings(settings: Context['settings']) {
     modQueueTarget: target && sendModQueue ? { token, channel: modQueueChannel || channel } : null,
     slackFingerprint: fingerprint(`${token}\n${channel}\n${modQueueChannel}`),
     postsLimit: Number(await settings.get('postsLimit')) || DEFAULT_POSTS_LIMIT,
+    onlySinceChange: (await settings.get('onlySinceChange')) !== false,
     template: template.trim() ? template : DEFAULT_POST_TEMPLATE,
     appearance,
   };
