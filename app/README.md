@@ -114,10 +114,44 @@ The domain is declared in `devvit.json` under `permissions.http.domains`.
 
 ## Limitations
 
-- Each install sends to one Slack channel.
+- Each install sends to one Slack channel, or two when mod queue posts are given a channel of their own.
 - The scheduled check looks at the newest posts only, up to the configured limit.
 - The catch-up action looks at the newest posts up to the number entered in its dialog, then keeps those inside the date range, so a wide date range on a busy subreddit needs a larger number.
 - Replies in a Slack message's thread are not removed when the post is deleted.
+
+## Troubleshooting
+
+**No posts are arriving in Slack.**
+- Check that the Slack bot token and channel ID are both filled in on the app's settings page.
+- Check that the bot has been invited to the channel. In Slack, type `/invite @your-app-name` in that channel.
+- The scheduled check only sends posts made since the bot token or a channel ID last changed. To send older posts, use **Fetch historical posts to Slack** and turn off "Only posts made since the bot token or channel ID last changed".
+
+**Mod queue posts are not arriving.**
+- Check that "Send" is set to "Public posts and mod queue posts".
+- Mod queue posts are sent at each scheduled check, not within seconds. Wait one schedule interval.
+- If a separate channel is set for them, the bot must be invited to that channel too.
+
+**A message shows the Slack app's name or icon instead of the post title or flair emoji.**
+- Check that the two MESSAGE APPEARANCE options are on.
+- The Slack app needs the `chat:write.customize` scope. If the scope was added after the app was installed, reinstall the Slack app to the workspace and paste the new bot token into the settings.
+- For the icon, open **Manage flairs** and check that the post's flair has an emoji. The emoji name is entered without colons and must exist in the Slack workspace under exactly that name.
+
+**A post was deleted on Reddit but its message is still in Slack.**
+- Open **Manage flairs** or **Fetch historical posts to Slack**. If removals are outstanding, the dialog says how many are being retried and how many are waiting for a settings change.
+- A removal waits for a settings change when the bot has been removed from the channel, the channel is archived, or the bot token is no longer valid. Fix that in Slack, or correct the token or channel ID in the settings, and the app tries again at the next scheduled check.
+- Replies in the message's thread, and copies people made elsewhere in Slack, are never removed by the app.
+
+**The settings page will not save the message format.**
+- Read the message it shows: it names the link or variable that is wrong. The rules are listed under "Post notification text" in the settings table above.
+
+**A message is cut short, or a post produced no message.**
+- Slack accepts at most 3,000 characters, so a longer message is shortened and ends with "…". This usually means the format includes `{body}`.
+- A post is skipped when the message format produces nothing for it.
+
+**The schedule interval was changed but the timing did not.**
+- A new interval takes effect the next time the app is upgraded or reinstalled on the subreddit.
+
+**For the developer.** The app's logs record post IDs, counts and Slack's error codes, never post content. Read them with `npx devvit logs YOUR_SUBREDDIT`.
 
 ## Support and reporting problems
 
@@ -125,7 +159,30 @@ The app is developed by Citizen Tech Collective, LLC. To report a bug, ask a que
 
 ## For developers
 
-The app is written in TypeScript on `@devvit/public-api` 0.15.0 with the legacy entry point `src/main.tsx` and configuration in `devvit.json`. From this folder, run `npm install`, `npx tsc --noEmit` to type-check, `npm test` to run the tests (Node 22.6 or later; they cover the message format check and need no extra packages), `npx devvit playtest YOUR_TEST_SUBREDDIT` to try it on a test subreddit, and `npx devvit upload` to publish a version. Terms of Service and Privacy Policy links must be saved in the app details form before a version that uses fetch can be approved. The full deployment guide is in `docs/devvit-deployment-guide.md` in the repository.
+The app is written in TypeScript on `@devvit/public-api` 0.15.0 with the legacy entry point `src/main.tsx` and configuration in `devvit.json`. From this folder, run `npm install`, `npx tsc --noEmit` to type-check, `npm test` to run the tests (Node 22.6 or later; they cover the message format check and the preparation of Reddit text for Slack, and need no extra packages), `npx devvit playtest YOUR_TEST_SUBREDDIT` to try it on a test subreddit, and `npx devvit upload` to publish a version. Terms of Service and Privacy Policy links must be saved in the app details form before a version that uses fetch can be approved. The full deployment guide is in `docs/devvit-deployment-guide.md` in the repository.
+
+### Project structure
+
+| File in `src/` | What it holds |
+|---|---|
+| `main.tsx` | The scheduled check and the triggers for new posts and approvals |
+| `settings.ts` | The settings page, and reading settings with their defaults |
+| `posts.ts` | The shape of a post, from Reddit's API and from trigger payloads |
+| `slack.ts` | Building Slack messages and calling the Slack Web API |
+| `slackText.ts` | Preparing Reddit text so it displays correctly in Slack |
+| `template.ts` | The message format's variables and the check run when it is saved |
+| `store.ts` | Everything kept in Reddit-hosted storage |
+| `sending.ts` | Sending one post or a batch |
+| `deletions.ts` | Removing messages from Slack when a post is deleted, with retries |
+| `dialogs.ts` | The Manage flairs and Fetch historical posts dialogs |
+
+Tests are in `tests/`. `devvit.json` declares the triggers, permissions and the one fetch domain.
+
+## Contributing
+
+Bug reports, questions and suggestions are welcome as issues at https://github.com/Citizen-Tech-Collective/devvit-reddit-to-slack/issues. Please do not include a Slack bot token or anything sensitive; issues are public.
+
+The code is not open source, so please open an issue to discuss a change before sending one. Anything you send, including a proposed change, may be used by Citizen Tech Collective, LLC as the LICENSE file describes.
 
 ## License
 
