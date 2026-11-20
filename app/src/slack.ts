@@ -1,17 +1,25 @@
 import type { SlackPost } from './posts.js';
 import { DEFAULT_POST_TEMPLATE, type AppearanceOptions, type SlackTarget } from './settings.js';
+import { flairEmoji, type FlairMap } from './flair.js';
 import { toSlackText } from './slackText.js';
 import type { TemplateVariable } from './template.js';
 
 export type SlackMessage = {
-  /** Sender name; set only when "Use post title as message sender" is on. */
+  /** Sender name: the post title when "Use post title as message sender" is on, or "Flair updated" on a flair change reply. */
   username?: string;
-  /** Sender icon, e.g. ":usa:"; set only when "Use flair emoji as message icon" is on and the flair has an emoji. */
+  /** Sender icon, e.g. ":usa:": the flair's emoji when "Use flair emoji as message icon" is on, or on a flair change reply. */
   icon_emoji?: string;
   unfurl_links?: boolean;
   unfurl_media?: boolean;
+  /** The ID of a message to reply to in its thread. */
+  thread_ts?: string;
   blocks: Array<{ type: string; text: { type: string; text: string } }>;
 };
+
+/** A message body of one block of Slack-formatted text. */
+export function textBlocks(text: string): SlackMessage['blocks'] {
+  return [{ type: 'section', text: { type: 'mrkdwn', text } }];
+}
 
 export type SlackMessageRef = { channel: string; ts: string };
 
@@ -25,10 +33,11 @@ export type SentMessage = SlackMessageRef & {
   customSender?: boolean;
   /** The channel setting at send time, kept only when it differs from `channel` (a name instead of an ID). */
   target?: string;
+  /** The post's flair text when the message was last written, so a flair change can be told from a repeat event. */
+  flair?: string;
+  /** A reply the app posted in the message's thread, such as a flair change notice. Deleted, never redacted. */
+  reply?: boolean;
 };
-
-/** Normalised flair name to Slack emoji name. */
-export type FlairMap = Record<string, string>;
 
 /**
  * `error` is Slack's own error code, `http_<status>`, `request_failed` when the
@@ -36,11 +45,6 @@ export type FlairMap = Record<string, string>;
  * message carried no message ID.
  */
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
-
-/** Lower-case letters and digits only, so "UK & Ireland" matches "uk&ireland". */
-export function normalizeFlair(flair: string): string {
-  return flair.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
 
 // Unknown {variables} are left as typed. The settings page refuses them when a template is saved.
 function renderTemplate(template: string, vars: Record<string, string>): string {
@@ -91,8 +95,7 @@ export function formatPost(
   template: string,
   appearance: AppearanceOptions
 ): SlackMessage | null {
-  const emojiName = flairMap[normalizeFlair(post.flairText)] ?? '';
-  const flairEmoji = emojiName ? `:${emojiName}:` : '';
+  const emoji = flairEmoji(post.flairText, flairMap);
   const created = new Date(post.createdUtc * 1000);
   const bodyPreview =
     post.body.length > BODY_PREVIEW_CHARS ? post.body.slice(0, BODY_PREVIEW_CHARS).trimEnd() + '…' : post.body;
@@ -102,7 +105,7 @@ export function formatPost(
     author: toSlackText(post.author),
     author_lower: encodeURIComponent(post.author.toLowerCase()),
     flair: toSlackText(post.flairText),
-    flair_emoji: flairEmoji,
+    flair_emoji: emoji,
     subreddit: subredditName,
     post_id: post.id.replace(/^t3_/, ''),
     post_url: post.url,
@@ -126,10 +129,10 @@ export function formatPost(
   const message: SlackMessage = {
     unfurl_links: false,
     unfurl_media: false,
-    blocks: [{ type: 'section', text: { type: 'mrkdwn', text } }],
+    blocks: textBlocks(text),
   };
   if (appearance.useTitleAsSender) message.username = post.title;
-  if (appearance.useFlairAsIcon && flairEmoji) message.icon_emoji = flairEmoji;
+  if (appearance.useFlairAsIcon && emoji) message.icon_emoji = emoji;
   return message;
 }
 
@@ -140,8 +143,9 @@ export function formatPost(
  */
 function deletionNotice(postId: string, subredditName: string, deletedAt: Date, createdAt: Date | undefined): SlackMessage['blocks'] {
   const posted = createdAt ? `\nPosted: ${slackDate(createdAt)}` : '';
-  const text = `:wastebasket: *Reddit post deleted*\nPost ID: ${postId.replace(/^t3_/, '')} (r/${subredditName})${posted}\nDeleted: ${slackDate(deletedAt)}`;
-  return [{ type: 'section', text: { type: 'mrkdwn', text } }];
+  return textBlocks(
+    `:wastebasket: *Reddit post deleted*\nPost ID: ${postId.replace(/^t3_/, '')} (r/${subredditName})${posted}\nDeleted: ${slackDate(deletedAt)}`
+  );
 }
 
 async function callSlack(token: string, method: string, payload: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
@@ -170,23 +174,27 @@ export async function postMessage(target: SlackTarget, message: SlackMessage): P
   return { ok: true, value: { channel: typeof channel === 'string' ? channel : target.channel, ts } };
 }
 
+/** Replace a sent message's body. A sender name or icon it was sent with stays as it was. */
+export async function updateMessage(token: string, message: SlackMessageRef, blocks: SlackMessage['blocks']): Promise<Result<null>> {
+  const result = await callSlack(token, 'chat.update', { channel: message.channel, ts: message.ts, blocks });
+  return result.ok ? { ok: true, value: null } : result;
+}
+
 /**
  * Take a deleted post's content out of Slack. A message sent with a custom
  * sender name or icon is deleted outright, because Slack cannot change those
- * after it is sent. Any other message is redacted in place.
+ * after it is sent, and so is a reply the app posted in a thread. Any other
+ * message is redacted in place.
  */
 export async function removeMessage(
   token: string,
   message: SentMessage,
   post: { id: string; subredditName: string; deletedAt: Date; createdAt: Date | undefined }
 ): Promise<Result<null>> {
-  const result = message.customSender
-    ? await callSlack(token, 'chat.delete', { channel: message.channel, ts: message.ts })
-    : await callSlack(token, 'chat.update', {
-        channel: message.channel,
-        ts: message.ts,
-        blocks: deletionNotice(post.id, post.subredditName, post.deletedAt, post.createdAt),
-      });
+  const result =
+    message.customSender || message.reply
+      ? await callSlack(token, 'chat.delete', { channel: message.channel, ts: message.ts })
+      : await updateMessage(token, message, deletionNotice(post.id, post.subredditName, post.deletedAt, post.createdAt));
   // message_not_found: someone already deleted it in Slack, which is the outcome wanted.
   if (result.ok || result.error === 'message_not_found') return { ok: true, value: null };
   return result;

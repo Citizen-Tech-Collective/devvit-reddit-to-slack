@@ -2,7 +2,7 @@ import { Devvit, type Context } from '@devvit/public-api';
 import { outstandingDeletionsNote } from './deletions.js';
 import { fetchPublicPosts, filterUnsent, sendPosts } from './sending.js';
 import { DEFAULT_POSTS_LIMIT, readSettings } from './settings.js';
-import { normalizeFlair } from './slack.js';
+import { normalizeFlair } from './flair.js';
 import { loadFlairList, loadFlairMap, saveFlairList, slackSettingsChangedAt, type FlairEntry } from './store.js';
 
 async function currentSubredditName(context: Context): Promise<string> {

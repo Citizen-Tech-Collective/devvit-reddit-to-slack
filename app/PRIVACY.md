@@ -1,20 +1,20 @@
 # `reddit-to-slack` — Privacy Policy
 
-**Last updated:** 4 November 2026
+**Last updated:** 20 November 2026
 **Developer:** Citizen Tech Collective, LLC ("CTC", "we")
 
-`reddit-to-slack` is a Reddit Developer Platform (Devvit) app that sends new subreddit posts to a Slack channel configured by that subreddit's moderators. It also deletes or redacts the Slack messages it creates when the corresponding posts are deleted or removed on Reddit.
+`reddit-to-slack` is a Reddit Developer Platform (Devvit) app that sends new subreddit posts to a Slack channel configured by that subreddit's moderators. It also deletes or redacts the Slack messages it creates when the corresponding posts are deleted or removed on Reddit, and updates them when a post's flair changes.
 
 Moderators choose the Slack destination and message format. The app never asks Reddit users for anything and never acts on a user's behalf. This policy is available from the app's listing on Reddit's Developer Platform before the app is installed, and from the app's source repository.
 
 ## Information the app processes
 
-The app processes information only to deliver messages, prevent duplicates, and delete or redact Slack messages when posts are deleted or removed.
+The app processes information only to deliver messages, prevent duplicates, keep messages current when a post's flair changes, and delete or redact Slack messages when posts are deleted or removed.
 
 - **Post information.** Messages use data from public posts. If the installing moderators turn on mod queue posts, the app also reads Reddit's mod queue for the subreddit and sends those posts, which are not public and are visible on Reddit only to the subreddit's moderators. By default, this includes the post title, post ID, author's username, and flair. Moderators can change the message using the variables available in the app.
-- **Moderator actions.** The app receives subreddit moderator-action events to identify post approvals. It ignores other moderator actions without storing them.
+- **Moderator actions.** The app receives subreddit moderator-action events to identify post approvals. It ignores other moderator actions without storing them. It also receives Reddit's post flair change events; for a post already sent to Slack, it rewrites the Slack message with the new flair and posts a notice of the change, naming the old and new flair, in that message's thread.
 - **Installation settings.** Reddit stores the Slack bot token, channel ID, and other moderator-configured options in the app's installation settings. The token is visible to the subreddit's moderators but is never included in messages or logs.
-- **Stored records.** Reddit-hosted storage holds each forwarded post's ID and, for each Slack message it became, the Slack channel and message identifiers. These records prevent duplicate messages and allow the app to locate messages for deletion or redaction. The app also stores moderator-configured flair names and their corresponding Slack emoji names. The app stores a short one-way fingerprint of the bot token and channel ID settings and the time they last changed. The fingerprint cannot be turned back into the token; it only lets the app notice that a setting has changed. While a deleted post's Slack message is waiting to be removed, the app also stores the post's creation and deletion times. It does not store post titles, post text, or usernames in this storage.
+- **Stored records.** Reddit-hosted storage holds each forwarded post's ID and, for each Slack message it became, including any flair change notice, the Slack channel and message identifiers, along with the post's flair text as last sent. These records prevent duplicate messages, let the app tell a flair change from a repeated report of the same flair, and allow the app to locate messages for deletion or redaction. The app also stores moderator-configured flair names and their corresponding Slack emoji names. The app stores a short one-way fingerprint of the bot token and channel ID settings and the time they last changed. The fingerprint cannot be turned back into the token; it only lets the app notice that a setting has changed. While a deleted post's Slack message is waiting to be removed, the app also stores the post's creation and deletion times. It does not store post titles, post text, or usernames in this storage.
 - **Diagnostic logs.** The app logs post IDs, subreddit names, counts, and error messages. It does not log post titles, post text, usernames, or Slack bot tokens. Reddit hosts these logs and keeps, per installation, the most recent 5,000 entries or 7 days, whichever is less. CTC can read them.
 
 ## Storage and sharing
@@ -35,6 +35,7 @@ When Reddit notifies the app that a forwarded post has been deleted or removed, 
 
 - Deletes the Slack message if the post title was used as its sender name or the flair was used as its icon, because those fields cannot be edited.
 - Otherwise, replaces the message with a deletion notice containing only the post ID, subreddit, posting time, and deletion time.
+- Deletes any flair change notice it posted in the message's thread.
 
 The app cannot delete copies, forwards, threaded replies, or other content created by Slack users or automations.
 

@@ -11,6 +11,7 @@ The app is a notification relay only. It never posts, comments, removes or edits
 - **Catches anything missed.** A scheduled check, every 15 minutes by default, looks at the newest public posts and sends any that have not yet been sent to Slack, so a brief outage does not lose posts. The same check sends mod queue posts when those are turned on, so they arrive at the next check, not within seconds. Unless that is turned off in the settings, it leaves alone posts made before the bot token or a channel ID last changed, so setting the app up or pointing it at a new channel does not send older posts by itself. It never sends a post that has been deleted or removed.
 - **Removes deleted posts from Slack.** When a post previously sent to Slack is deleted or removed, the app deletes the Slack message, or redacts it in place, and then clears its own record of the post. If Slack does not accept the removal, the app retries on a lengthening schedule. See "Handling deleted posts".
 - **Maps flairs to emoji.** The Manage flairs menu action lists the subreddit's post flairs and lets moderators choose the Slack emoji for each one, without a code change.
+- **Follows flair changes.** When the flair of a post already in Slack changes, the app rewrites the Slack message with the new flair and posts a short notice in the message's thread, sent as "Flair updated" with the new flair's emoji as its icon. See "Flair changes".
 - **Optional catch-up.** A second menu action fetches recent public posts within a date range and sends the ones not already sent to the channel currently configured, or just counts them. By default it only looks at posts made since the bot token or channel ID last changed; turn that option off to include older posts, for example to fill a new channel.
 
 ## How it is set up
@@ -49,6 +50,15 @@ Open the subreddit's "…" menu and choose **Manage flairs**. The dialog shows o
 
 A post whose flair has no emoji, or no flair at all, is sent without an icon, so Slack shows the Slack app's own icon. If an emoji does not exist in the workspace, Slack also shows the app's icon.
 
+### Flair changes
+
+When a moderator or the author changes the flair of a post the app has sent, Reddit reports the change and the app does two things to each Slack message the post became:
+
+1. **Rewrites the message** with the notification text filled in again for the post as it is now, so `{flair}` and `{flair_emoji}` show the new flair. Slack does not allow a message's sender name or icon to be changed after it is sent, so when "Use flair emoji as message icon" is on, the icon keeps the old emoji.
+2. **Posts a notice in the message's thread**, for example "Flair changed from *News* to *Discussion*", sent with "Flair updated" as the sender name and the new flair's emoji from Manage flairs as the icon. A flair with no emoji, or a flair that is removed ("Flair *News* removed"), shows the Slack app's own icon.
+
+A flair set while a new post is waiting to be sent is the one the first message shows; no notice is posted for it. Messages sent before this feature existed get a notice that names only the new flair. If the message has been deleted in Slack already, nothing is posted. The app does not retry a failed rewrite or notice; it logs the error and records the new flair so the same change is not announced twice.
+
 ## What a Slack message looks like
 
 With both MESSAGE APPEARANCE options on, each post sent to Slack produces one message:
@@ -79,7 +89,8 @@ Reddit requires apps to remove deleted content from everywhere the app has sent 
 1. Removes the Slack message, in one of two ways depending on how that message was sent, which the MESSAGE APPEARANCE settings decided at the time:
    - **If the message was sent with the post title as sender or a flair emoji as icon, it is deleted.** Slack does not allow a message's sender name or icon to be changed after it is sent, and those would still show the post's title or flair, so the whole message is removed.
    - **Otherwise the Slack message is redacted in place.** Its text is replaced with a short notice that carries only the post's short ID, the subreddit, when the post was made and when it was deleted, with times shown in each reader's own timezone. The title, author and link are removed.
-2. Deletes its own record of the post and of the Slack message it sent, from Reddit-hosted storage, once Slack confirms.
+2. Deletes any flair change notice it posted in the message's thread.
+3. Deletes its own record of the post and of the Slack messages it sent, from Reddit-hosted storage, once Slack confirms.
 
 Example of a redacted message:
 
@@ -88,7 +99,7 @@ Example of a redacted message:
 > Posted: Oct 22 at 4:26 PM  
 > Deleted: Oct 22 at 6:04 PM
 
-Deleting or redacting a message does not touch replies in its thread, or copies people have made elsewhere in Slack. The moderators and workspace admins who install the app are responsible for reviewing and removing those. This responsibility is set out in the Terms of Service.
+Deleting or redacting a message does not touch replies other people have made in its thread, or copies people have made elsewhere in Slack. The moderators and workspace admins who install the app are responsible for reviewing and removing those. This responsibility is set out in the Terms of Service.
 
 If Slack cannot find the message, for example because someone already deleted it, the app treats the post as handled. If Slack does not accept a removal, what happens next depends on Slack's answer:
 
@@ -101,7 +112,7 @@ If the channel setting changes, older messages stay on record with the channel t
 
 ## Data handling in brief
 
-The app reads post data the subreddit's moderators can see: public posts, and, when mod queue posts are turned on, the posts in Reddit's mod queue, which are not public. The default message uses the post ID, title, author username, author flair and post flair. Through the MESSAGE FORMAT variables, moderators can also include the post's body text, link and thumbnail URLs, post type, NSFW and spoiler flags, language, creation time, score and comment count. Whatever the message contains is sent to the Slack channel the moderators configured. In Reddit-hosted storage it keeps, for each post sent to Slack, the post ID and a reference to each Slack message it posted (channel and message ID), so it does not send the same post twice and can delete or redact that message later; the record is removed when the post is deleted or removed on Reddit and its Slack message has been deleted or redacted. It also keeps the flair list moderators save in Manage flairs and a short one-way fingerprint of the bot token and channel ID settings with the time they last changed, used only to notice that one of them has changed. The Slack bot token is stored in the app's settings for the subreddit and is visible to that subreddit's moderators. Nothing goes to the developer or to any other third party. Full details are in the Privacy Policy linked from the app's details page.
+The app reads post data the subreddit's moderators can see: public posts, and, when mod queue posts are turned on, the posts in Reddit's mod queue, which are not public. The default message uses the post ID, title, author username, author flair and post flair. Through the MESSAGE FORMAT variables, moderators can also include the post's body text, link and thumbnail URLs, post type, NSFW and spoiler flags, language, creation time, score and comment count. Whatever the message contains is sent to the Slack channel the moderators configured. In Reddit-hosted storage it keeps, for each post sent to Slack, the post ID, a reference to each Slack message it posted (channel and message ID) and the post's flair text as last sent, so it does not send the same post twice, can delete or redact that message later and can tell a flair change from a repeated report of the same flair; the record is removed when the post is deleted or removed on Reddit and its Slack message has been deleted or redacted. It also keeps the flair list moderators save in Manage flairs and a short one-way fingerprint of the bot token and channel ID settings with the time they last changed, used only to notice that one of them has changed. The Slack bot token is stored in the app's settings for the subreddit and is visible to that subreddit's moderators. Nothing goes to the developer or to any other third party. Full details are in the Privacy Policy linked from the app's details page.
 
 ## Fetch domains
 
@@ -118,7 +129,7 @@ The domain is declared in `devvit.json` under `permissions.http.domains`.
 - Each install sends to one Slack channel, or two when mod queue posts are given a channel of their own.
 - The scheduled check looks at the newest posts only, up to the configured limit.
 - The catch-up action looks at the newest posts up to the number entered in its dialog, then keeps those inside the date range, so a wide date range on a busy subreddit needs a larger number.
-- Replies in a Slack message's thread are not removed when the post is deleted.
+- Replies other people make in a Slack message's thread are not removed when the post is deleted. The app's own flair change notices are.
 
 ## Troubleshooting
 
@@ -140,7 +151,7 @@ The domain is declared in `devvit.json` under `permissions.http.domains`.
 **A post was deleted on Reddit but its message is still in Slack.**
 - Open **Manage flairs** or **Fetch historical posts to Slack**. If removals are outstanding, the dialog says how many are being retried and how many are waiting for a settings change.
 - A removal waits for a settings change when the bot has been removed from the channel, the channel is archived, or the bot token is no longer valid. Fix that in Slack, or correct the token or channel ID in the settings, and the app tries again at the next scheduled check.
-- Replies in the message's thread, and copies people made elsewhere in Slack, are never removed by the app.
+- Replies other people made in the message's thread, and copies people made elsewhere in Slack, are never removed by the app.
 
 **The settings page will not save the message format.**
 - Read the message it shows: it names the link or variable that is wrong. The rules are listed under "Post notification text" in the settings table above.
@@ -169,15 +180,17 @@ The app is written in TypeScript on `@devvit/public-api` 0.15.0 with the legacy 
 | `main.tsx` | The scheduled check and the triggers for new posts and approvals |
 | `settings.ts` | The settings page, and reading settings with their defaults |
 | `posts.ts` | The shape of a post, from Reddit's API and from trigger payloads |
+| `flair.ts` | Matching flair names to their emoji, and the flair change notice |
 | `slack.ts` | Building Slack messages and calling the Slack Web API |
 | `slackText.ts` | Preparing Reddit text so it displays correctly in Slack |
 | `template.ts` | The message format's variables and the check run when it is saved |
 | `store.ts` | Everything kept in Reddit-hosted storage |
 | `sending.ts` | Sending one post or a batch |
 | `deletions.ts` | Removing messages from Slack when a post is deleted, with retries |
+| `flairChanges.ts` | Rewriting a message and posting a thread notice when a post's flair changes |
 | `dialogs.ts` | The Manage flairs and Fetch historical posts dialogs |
 
-Tests are in `tests/`. `devvit.json` declares the triggers, permissions and the one fetch domain.
+Tests are in `tests/`; `tests/ts-imports.mjs` lets the test runner load the sources' `.js`-style imports. `devvit.json` declares the triggers, permissions and the one fetch domain.
 
 ## Contributing
 

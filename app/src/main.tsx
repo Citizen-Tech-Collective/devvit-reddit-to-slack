@@ -1,6 +1,7 @@
 import { Devvit, type TriggerContext } from '@devvit/public-api';
 import { retryDueDeletions } from './deletions.js';
 import './dialogs.js';
+import './flairChanges.js';
 import { fromTriggerPost, isPublic, type SlackPost, type TriggerPost } from './posts.js';
 import { fetchModQueuePosts, fetchPublicPosts, filterUnsent, NEW_POST_DELAY_MS, sendPost, sendPosts } from './sending.js';
 import { readScheduleCron, readSettings, type SlackTarget } from './settings.js';
@@ -136,9 +137,12 @@ async function handleIncomingPost(
     if (await wasPostSent(context, subredditName, post.id, target.channel)) return;
     // The event carries a snapshot. Reddit's guidance is to fetch the current
     // object when a decision depends on its state, here whether it is public.
-    if (!isPublic(await context.reddit.getPostById(post.id))) return;
+    const current = await context.reddit.getPostById(post.id);
+    if (!isPublic(current)) return;
     const flairMap = await loadFlairMap(context, subredditName);
-    await sendPost(context, subredditName, fromTriggerPost(post, author ?? ''), { target, flairMap, template, appearance });
+    // A flair chosen during the wait above is in the fetched post, not the snapshot.
+    const slackPost = { ...fromTriggerPost(post, author ?? ''), flairText: current.flair?.text ?? '' };
+    await sendPost(context, subredditName, slackPost, { target, flairMap, template, appearance });
   } catch (error) {
     console.error(`${eventName} for ${post.id} failed:`, error);
   }

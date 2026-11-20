@@ -1,9 +1,10 @@
 import type { Context } from '@devvit/public-api';
-import { normalizeFlair, type FlairMap, type SentMessage } from './slack.js';
+import { normalizeFlair, type FlairMap } from './flair.js';
+import type { SentMessage } from './slack.js';
 
 // The app's Redis records, apart from the scheduled job's ID, which main.tsx
-// keeps. All of it is identifiers, settings, times and short-lived counters:
-// no post titles, text or usernames.
+// keeps. All of it is identifiers, settings, flair names, times and
+// short-lived counters: no post titles, text or usernames.
 
 export type RedisContext = Pick<Context, 'redis'>;
 
@@ -15,8 +16,9 @@ function sub(subredditName: string): string {
 }
 
 // post:<subreddit>:<postId> -> the Slack messages the post became. Usually
-// one; more when the channel setting changed and the post was sent again, or
-// when a mod queue post was approved and sent to the main channel as well. No
+// one; more when the channel setting changed and the post was sent again,
+// when a mod queue post was approved and sent to the main channel as well, or
+// when a flair change was announced in a message's thread. No
 // expiry: Reddit lets apps keep post and message IDs, and this record is what
 // makes a later deletion actionable. Cleared once the post has been deleted
 // on Reddit and its Slack messages are gone, or when the app gives up

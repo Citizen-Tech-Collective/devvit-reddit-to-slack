@@ -8,7 +8,8 @@
       "onAppUpgrade",
       "onPostCreate",
       "onModAction",
-      "onPostDelete"
+      "onPostDelete",
+      "onPostFlairUpdate"
     ]
   },
   "permissions": {

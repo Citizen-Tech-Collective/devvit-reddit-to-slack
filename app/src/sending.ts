@@ -1,7 +1,8 @@
 import type { RedditAPIClient } from '@devvit/public-api';
 import { fromRedditPost, isAwaitingReview, isPublic, type SlackPost } from './posts.js';
 import type { AppearanceOptions, SlackTarget } from './settings.js';
-import { formatPost, postMessage, type FlairMap, type SentMessage } from './slack.js';
+import type { FlairMap } from './flair.js';
+import { formatPost, postMessage, type SentMessage } from './slack.js';
 import { claimSend, readMessages, releaseSend, wasJustDeleted, wasPostSent, writeMessages, type RedisContext } from './store.js';
 
 export type Delivery = { target: SlackTarget; flairMap: FlairMap; template: string; appearance: AppearanceOptions };
@@ -66,7 +67,7 @@ export async function sendPost(context: RedisContext, subredditName: string, pos
     console.error(`Post ${post.id} not sent to Slack: error=${result.error}`);
     return false;
   }
-  const sent: SentMessage = { ...result.value };
+  const sent: SentMessage = { ...result.value, flair: post.flairText };
   if (message.username || message.icon_emoji) sent.customSender = true;
   if (target.channel !== sent.channel) sent.target = target.channel;
   const earlier = await readMessages(context, subredditName, post.id);

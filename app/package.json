@@ -5,7 +5,7 @@
   "license": "SEE LICENSE IN ../LICENSE",
   "type": "module",
   "scripts": {
-    "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\"",
+    "test": "node --test --experimental-strip-types --import ./tests/ts-imports.mjs \"tests/**/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
