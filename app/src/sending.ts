@@ -8,8 +8,10 @@ import { claimSend, readMessages, releaseSend, wasJustDeleted, wasPostSent, writ
 export type Delivery = { target: SlackTarget; flairMap: FlairMap; template: string; appearance: AppearanceOptions };
 
 // AutoModerator and the spam filter can remove a post within moments of
-// submission. Nothing is sent until a post is this old, so that such a
-// deletion arrives first and the post is never sent at all.
+// submission. A new post is held back this long (the trigger waits; the
+// scheduled check and the historical fetch skip younger posts), so that such
+// a deletion arrives first and the post is never sent at all. An approval is
+// sent at once.
 export const NEW_POST_DELAY_MS = 10_000;
 
 function oldEnough(post: { createdAt: Date }): boolean {

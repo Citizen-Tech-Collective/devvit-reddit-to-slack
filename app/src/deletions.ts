@@ -13,8 +13,8 @@ type DeletionContext = Pick<Context, 'redis' | 'settings' | 'scheduler'>;
 
 const RETRY_JOB = 'retryDeletions';
 
-// Slack refusals that only a change to the bot token or a channel ID setting
-// can fix. The removal is parked and tried again when any of those changes.
+// Slack refusals that will not clear by waiting. The removal is parked and
+// tried again only when the bot token or a channel ID setting changes.
 const NEEDS_SETTINGS_CHANGE = new Set([
   // The channel is gone, archived, or the bot is no longer in it
   'channel_not_found',
